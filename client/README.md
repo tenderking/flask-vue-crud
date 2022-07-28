@@ -1,6 +1,6 @@
 # client
 
-This template should help get you started developing with Vue 3 in Vite.
+This project was built with flask a python framework, and vue 3 a JavaScript frontend framework.
 
 ## Recommended IDE Setup
 
@@ -13,15 +13,15 @@ TypeScript cannot handle type information for `.vue` imports by default, so we r
 If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
 
 1. Disable the built-in TypeScript Extension
-    1) Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-    2) Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
+   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
+   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
 2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
 
 ## Customize configuration
 
 See [Vite Configuration Reference](https://vitejs.dev/config/).
 
-## Project Setup
+## Project Setup Vue
 
 ```sh
 npm install
@@ -43,4 +43,18 @@ npm run build
 
 ```sh
 npm run lint
+```
+
+## Project Setup Flask
+
+Enter the server folder and activate the python enviroment.
+
+```sh
+.\env\Scripts\activate
+```
+
+### Start the Flask app
+
+```sh
+python app.py
 ```

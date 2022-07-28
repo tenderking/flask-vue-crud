@@ -1,115 +1,12 @@
 <template>
   <teleport to="#app">
-    <b-modal
-      id="book-modal"
-      class="position-absolute top-50 start-50 translate-middle border border-primary bg-light p-3"
-      title="Add a new book"
+    <TheModal
+      v-model:title-value="addBookForm.title"
+      v-model:author-value="addBookForm.author"
+      v-model:read-value="addBookForm.read"
+      :onSubmit="onSubmit"
       v-if="modalShow"
-      hide-footer
-      style="z-index: 10o"
-    >
-      <!-- <b-form class="w-100"> -->
-      <form class="w-100" @submit="onSubmit" @reset="onReset">
-        <div
-          class="d-flex p-2"
-          id="form-title-group"
-          label="Title:"
-          label-for="form-title-input"
-        >
-          <input
-            id="form-title-input"
-            type="text"
-            v-model="addBookForm.title"
-            required
-            placeholder="Enter title"
-          />
-        </div>
-        <div
-          class="d-flex p-2"
-          id="form-author-group"
-          label="Author:"
-          label-for="form-author-input"
-        >
-          <input
-            id="form-author-input"
-            type="text"
-            v-model="addBookForm.author"
-            required
-            placeholder="Enter author"
-          />
-        </div>
-
-        <div class="d-flex ms-4 p-2 gap-3 form-check" id="form-read-group">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            v-model="addBookForm.read"
-            id="flexCheckChecked"
-            checked
-          />
-          <label class="form-check-label" for="flexCheckChecked"> Read? </label>
-        </div>
-        <div class="btn-group" role="group">
-          <button type="submit" class="btn btn-primary" variant="primary">Submit</button>
-          <button type="reset" class="btn btn-danger" variant="danger">Reset</button>
-        </div>
-      </form>
-    </b-modal>
-    <b-modal
-      id="book-modal"
-      class="position-absolute top-50 start-50 translate-middle border border-primary bg-light p-3"
-      title="Add a new book"
-      v-if="updateModalShow"
-      hide-footer
-      style="z-index: 10o"
-    >
-      <!-- <b-form class="w-100"> -->
-      <form class="w-100" @submit="onSubmitUpdate" @reset="onReset">
-        <div
-          class="d-flex p-2"
-          id="form-title-group"
-          label="Title:"
-          label-for="form-title-input"
-        >
-          <input
-            id="form-title-input"
-            type="text"
-            v-model="editForm.title"
-            required
-            placeholder="Enter title"
-          />
-        </div>
-        <div
-          class="d-flex p-2"
-          id="form-author-group"
-          label="Author:"
-          label-for="form-author-input"
-        >
-          <input
-            id="form-author-input"
-            type="text"
-            v-model="editForm.author"
-            required
-            placeholder="Enter author"
-          />
-        </div>
-
-        <div class="d-flex ms-4 p-2 gap-3 form-check" id="form-read-group">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            v-model="editForm.read"
-            id="flexCheckChecked"
-            checked
-          />
-          <label class="form-check-label" for="flexCheckChecked"> Read? </label>
-        </div>
-        <div class="btn-group" role="group">
-          <button type="submit" class="btn btn-primary" variant="primary">Submit</button>
-          <button type="reset" class="btn btn-danger" variant="danger">Reset</button>
-        </div>
-      </form>
-    </b-modal>
+    />
   </teleport>
   <b-container>
     <div class="row">
@@ -157,22 +54,22 @@
 import axios from "axios";
 import { ref, onMounted } from "vue";
 import Alert from "./Alert.vue";
+import TheModal from "./TheModal.vue";
 
 const modalShow = ref(false);
-const updateModalShow = ref(false);
 
 let booksList = ref([] as any[]);
 let addBookForm = ref({
   id: "",
   title: "",
   author: "",
-  read: [],
+  read: false,
 });
 let editForm = ref({
   id: "",
   title: "",
   author: "",
-  read: [],
+  read: false,
 });
 
 //Alert message
@@ -212,57 +109,59 @@ const addBook = (payload = {}) => {
 const initForm = () => {
   addBookForm.value.title = "";
   addBookForm.value.author = "";
-  addBookForm.value.read = [];
+  addBookForm.value.read = false;
 
   editForm.value.id = "";
   editForm.value.title = "";
   editForm.value.author = "";
-  editForm.value.read = [];
+  editForm.value.read = false;
 };
 
-const onSubmit = (e: Event) => {
-  e.preventDefault();
+const onSubmit = () => {
+  console.log("I am submitting");
   const payload = {
     title: addBookForm.value.title,
     author: addBookForm.value.author,
     read: false,
   };
+  console.log("payload is", payload);
   addBook(payload);
   initForm();
   modalShow.value = false;
 };
-const onReset = (e: Event) => {
-  e.preventDefault();
-};
+// const onReset = (e: Event) => {
+//   e.preventDefault();
+//   initForm();
+// };
 const editBook = (book: any) => {
   console.log("You have clicked on:", book.author);
-  editForm.value = book;
-  updateModalShow.value = true;
-  console.log("received:", editForm.value);
+  addBookForm.value = book;
+  modalShow.value = true;
 };
-const onSubmitUpdate = (evt: Event) => {
-  evt.preventDefault();
-  const payload = {
-    title: editForm.value.title,
-    author: editForm.value.author,
-    read: editForm.value.read,
-  };
-  updateBook(payload, editForm.value.id);
-};
-const updateBook = (
-  payload: { title: string; author: string; read: never[] },
-  bookID: string
-) => {
-  const path = `http://localhost:5000/books/${bookID}`;
-  axios
-    .put(path, payload)
-    .then(() => {
-      getBooks();
-    })
-    .catch((error) => {
-      // eslint-disable-next-line
-      console.error(error);
-      getBooks();
-    });
-};
+// const onSubmitUpdate = (evt: Event) => {
+//   evt.preventDefault();
+//   const payload = {
+//     title: editForm.value.title,
+//     author: editForm.value.author,
+//     read: editForm.value.read,
+//   };
+//   updateBook(payload, editForm.value.id);
+// };
+
+// const updateBook = (
+//   payload: { title: string; author: string; read: never[] },
+//   bookID: string
+// ) => {
+//   const path = `http://localhost:5000/books/${bookID}`;
+//   axios
+//     .put(path, payload)
+//     .then(() => {
+//       getBooks();
+//     })
+//     .catch((error) => {
+//       // eslint-disable-next-line
+//       console.error(error);
+//       getBooks();
+//     });
+// };
 </script>
