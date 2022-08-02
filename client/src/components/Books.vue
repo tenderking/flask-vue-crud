@@ -1,3 +1,4 @@
+<!-- eslint-disable prettier/prettier -->
 <template>
   <teleport to="#app">
     <TheModal
@@ -5,8 +6,8 @@
       v-model:author-value="bookForm.author"
       v-model:read-value="bookForm.read"
       @click="onSubmitFunction"
-      v-on-click-outside="modalShow=false"
       v-if="modalShow"
+      ref="myModal"
     />
   </teleport>
   <b-container>
@@ -62,18 +63,18 @@ import axios from "axios";
 import { computed, ref, onMounted } from "vue";
 import Alert from "./Alert.vue";
 import TheModal from "./TheModal.vue";
-import { vOnClickOutside } from '@vueuse/components'
+import { onClickOutside } from "@vueuse/core";
 
 const modalShow = ref(false);
 
-let booksList = ref([] as any[]);
-let addBookForm = ref({
+const booksList = ref([] as any[]);
+const addBookForm = ref({
   id: "",
   title: "",
   author: "",
   read: [],
 });
-let editForm = ref({
+const editForm = ref({
   id: "",
   title: "",
   author: "",
@@ -84,6 +85,8 @@ let editForm = ref({
 const message = ref("");
 const showMessage = ref(false);
 const updateActive = ref(false);
+const myModal = ref(null);
+onClickOutside(myModal, () => (modalShow.value = false));
 
 // AXIOS REST method
 
