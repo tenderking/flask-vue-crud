@@ -1,0 +1,25 @@
+get http://localhost:5000/books
+
+###
+
+post http://localhost:5000/books
+Content-Type: application/json
+
+{
+  "author":"Hellogf",
+  "title":"World",
+  "read":true
+}
+
+###
+put http://localhost:5000/books/8c54c3e1ef2e49b4bd03aada16a9af3
+Content-Type: application/json
+
+{
+  "author":"Yellow love",
+  "title":"Car",
+  "read":false
+}
+
+###
+DELETE  http://localhost:5000/books/8c54c3e1ef2e49b4bd03aada16a9af3

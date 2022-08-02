@@ -7,7 +7,7 @@
     style="z-index: 10o"
   >
     <!-- <b-form class="w-100"> -->
-    <form class="w-100" @reset="onReset">
+    <form class="w-100" @submit.prevent="">
       <div
         class="d-flex p-2"
         id="form-title-group"
@@ -61,7 +61,12 @@
         <label class="form-check-label" for="flexCheckChecked"> Read? </label>
       </div>
       <div class="btn-group" role="group">
-        <button class="btn btn-primary" variant="primary" @click="onSubmit()">
+        <button
+          class="btn btn-primary"
+          variant="primary"
+          @click="$emit('click')"
+          type="submit"
+        >
           Submit
         </button>
         <button type="reset" class="btn btn-danger" variant="danger">Reset</button>
@@ -74,11 +79,7 @@
 defineProps({
   titleValue: { type: String },
   authorValue: { type: String },
-  readValue: { type: Boolean },
-
-  onSubmit: { type: Function, required: true },
+  readValue: { type: null },
 });
-defineEmits(["update:titleValue", "update:authorValue", "update:readValue"]);
-
-const onReset = () => console.log("reset");
+defineEmits(["update:titleValue", "update:authorValue", "update:readValue", "click"]);
 </script>

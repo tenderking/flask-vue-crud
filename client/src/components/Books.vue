@@ -1,10 +1,11 @@
 <template>
   <teleport to="#app">
     <TheModal
-      v-model:title-value="addBookForm.title"
-      v-model:author-value="addBookForm.author"
-      v-model:read-value="addBookForm.read"
-      :onSubmit="onSubmit"
+      v-model:title-value="bookForm.title"
+      v-model:author-value="bookForm.author"
+      v-model:read-value="bookForm.read"
+      @click="onSubmitFunction"
+      v-on-click-outside="modalShow=false"
       v-if="modalShow"
     />
   </teleport>
@@ -40,7 +41,13 @@
                   >
                     Update
                   </button>
-                  <button type="button" class="btn btn-danger btn-sm">Delete</button>
+                  <button
+                    type="button"
+                    @click="deleteBook(book.id)"
+                    class="btn btn-danger btn-sm"
+                  >
+                    Delete
+                  </button>
                 </div>
               </td>
             </tr>
@@ -52,9 +59,10 @@
 </template>
 <script lang="ts" setup>
 import axios from "axios";
-import { ref, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
 import Alert from "./Alert.vue";
 import TheModal from "./TheModal.vue";
+import { vOnClickOutside } from '@vueuse/components'
 
 const modalShow = ref(false);
 
@@ -63,62 +71,48 @@ let addBookForm = ref({
   id: "",
   title: "",
   author: "",
-  read: false,
+  read: [],
 });
 let editForm = ref({
   id: "",
   title: "",
   author: "",
-  read: false,
+  read: [],
 });
 
 //Alert message
 const message = ref("");
 const showMessage = ref(false);
-// AXIOS REST methods
-const path = "http://localhost:5000/books";
+const updateActive = ref(false);
+
+// AXIOS REST method
 
 const getBooks = () => {
+  const path = "http://localhost:5000/books";
   axios
     .get(path)
     .then((res) => {
       booksList.value = res.data.books;
-      console.table(booksList.value);
     })
     .catch((error) => {
       console.error(error);
     });
 };
-
 onMounted(() => {
   getBooks();
 });
-
-const addBook = (payload = {}) => {
-  axios
-    .post(path, payload)
-    .then(() => {
-      getBooks();
-      message.value = "Book added";
-      showMessage.value = true;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-};
 const initForm = () => {
   addBookForm.value.title = "";
   addBookForm.value.author = "";
-  addBookForm.value.read = false;
+  addBookForm.value.read = [];
 
   editForm.value.id = "";
   editForm.value.title = "";
   editForm.value.author = "";
-  editForm.value.read = false;
+  editForm.value.read = [];
 };
 
 const onSubmit = () => {
-  console.log("I am submitting");
   const payload = {
     title: addBookForm.value.title,
     author: addBookForm.value.author,
@@ -128,40 +122,70 @@ const onSubmit = () => {
   addBook(payload);
   initForm();
   modalShow.value = false;
+  updateActive.value = false;
 };
 // const onReset = (e: Event) => {
 //   e.preventDefault();
 //   initForm();
 // };
 const editBook = (book: any) => {
-  console.log("You have clicked on:", book.author);
-  addBookForm.value = book;
+  console.log("You have clicked on:", book.id);
+  editForm.value = book;
   modalShow.value = true;
+  updateActive.value = true;
 };
-// const onSubmitUpdate = (evt: Event) => {
-//   evt.preventDefault();
-//   const payload = {
-//     title: editForm.value.title,
-//     author: editForm.value.author,
-//     read: editForm.value.read,
-//   };
-//   updateBook(payload, editForm.value.id);
-// };
+const onSubmitUpdate = () => {
+  const payload = {
+    id: editForm.value.id,
+    title: editForm.value.title,
+    author: editForm.value.author,
+    read: editForm.value.read,
+  };
+  console.table(payload);
+  updateBook(payload, editForm.value.id);
+};
 
-// const updateBook = (
-//   payload: { title: string; author: string; read: never[] },
-//   bookID: string
-// ) => {
-//   const path = `http://localhost:5000/books/${bookID}`;
-//   axios
-//     .put(path, payload)
-//     .then(() => {
-//       getBooks();
-//     })
-//     .catch((error) => {
-//       // eslint-disable-next-line
-//       console.error(error);
-//       getBooks();
-//     });
-// };
+const addBook = (payload = {}) => {
+  const path = "http://localhost:5000/books";
+  axios
+    .post(path, payload)
+    .then(() => getBooks())
+    .catch((error) => {
+      console.error(error);
+    });
+};
+const updateBook = (payload: {}, bookID: string) => {
+  const path = `http://localhost:5000/books/${bookID}`;
+  axios
+    .put(path, payload)
+    .then(() => {
+      console.log(bookID);
+      modalShow.value = false;
+      message.value = "Book updated";
+      getBooks();
+    })
+    .catch((error) => {
+      // eslint-disable-next-line
+      console.log(bookID);
+      console.error(error);
+    });
+};
+const deleteBook = (bookID: String) => {
+  const path = `http://localhost:5000/books/${bookID}`;
+  axios
+    .delete(path)
+    .then(() => {
+      message.value = "Book removed";
+      showMessage.value = true;
+      getBooks();
+    })
+    .catch((error) => console.error(error));
+};
+const onSubmitFunction = computed(() => {
+  return updateActive.value ? onSubmitUpdate : onSubmit;
+});
+
+const bookForm = computed(() => {
+  return updateActive.value ? editForm.value : addBookForm.value;
+});
 </script>
