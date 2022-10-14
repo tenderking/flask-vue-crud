@@ -94,10 +94,10 @@ const getBooks = () => {
   const path = "http://localhost:5000/books";
   axios
     .get(path)
-    .then((res) => {
+    .then((res: { data: { books: any[] } }) => {
       booksList.value = res.data.books;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error(error);
     });
 };
@@ -153,7 +153,7 @@ const addBook = (payload = {}) => {
   axios
     .post(path, payload)
     .then(() => getBooks())
-    .catch((error) => {
+    .catch((error: any) => {
       console.error(error);
     });
 };
@@ -167,7 +167,7 @@ const updateBook = (payload: {}, bookID: string) => {
       message.value = "Book updated";
       getBooks();
     })
-    .catch((error) => {
+    .catch((error: any) => {
       // eslint-disable-next-line
       console.log(bookID);
       console.error(error);
@@ -182,7 +182,7 @@ const deleteBook = (bookID: String) => {
       showMessage.value = true;
       getBooks();
     })
-    .catch((error) => console.error(error));
+    .catch((error: any) => console.error(error));
 };
 const onSubmitFunction = computed(() => {
   return updateActive.value ? onSubmitUpdate : onSubmit;
