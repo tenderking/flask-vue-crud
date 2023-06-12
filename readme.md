@@ -6,6 +6,21 @@
 
 ```
 . "\env\Scripts\\Activate.ps1"
+
+```
+
+or using bash
+
+```
+source env/Scripts/activate
+```
+
+###
+
+to install neccesary packages
+
+```
+pip install -r requirements.txt
 ```
 
 ### To run python server
@@ -13,6 +28,7 @@
 make sure you're in the server folder
 
 ```
+export FLASK_APP=app
 flask run
 ```
 
