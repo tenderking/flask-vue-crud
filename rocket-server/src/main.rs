@@ -9,7 +9,7 @@ use rocket::State;
 // The type to represent the ID of a message.
 
 // We're going to store all of the books here. No need for a DB.
-#[derive(Serialize, Clone, Deserialize, Debug)]
+#[derive(Serialize, Clone, Deserialize, Debug, PartialEq)]
 #[serde(crate = "rocket::serde")]
 struct Book {
     id: Option<Id>,
@@ -39,15 +39,22 @@ async fn add_book(book_list: &State<BookList>, new_book: Json<Book>) -> Json<Vec
     Json((*my_list).clone())
 }
 
-// #[put("/<id>", data = "<book>")]
-// fn update(id: Id, book: Json<Message<'_>>) -> Value {
-//     if db.contains_key(&id) {
-//         db.insert(id, msg.contents);
-//         json!({ "status": "ok" })
-//     } else {
-//         json!({ "status": "error" })
-//     }
-// }
+#[put("/books/<id>", data = "<updated_book>")]
+async fn update_book(
+    id: Id,
+    updated_book: Json<Book>,
+    book_list: &State<BookList>,
+) -> Option<Json<Vec<Book>>> {
+    let mut my_list = book_list.lock().await;
+    let index = (*my_list).iter().position(|book| book.id == Some(id));
+    if let Some(index) = index {
+        (*my_list)[index] = updated_book.into_inner();
+        Some(Json((*my_list).clone()))
+    } else {
+        None
+    }
+}
+
 #[catch(404)]
 fn not_found() -> Value {
     json!({
@@ -58,7 +65,7 @@ fn not_found() -> Value {
 pub fn stage() -> rocket::fairing::AdHoc {
     rocket::fairing::AdHoc::on_ignite("JSON", |rocket| async {
         rocket
-            .mount("/", routes![list_books, index, add_book])
+            .mount("/", routes![index, list_books, add_book, update_book])
             .register("/", catchers![not_found])
             .manage(BookList::new(vec![
                 Book {
@@ -80,4 +87,53 @@ pub fn stage() -> rocket::fairing::AdHoc {
 #[launch]
 fn rocket() -> _ {
     rocket::build().attach(stage())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rocket::http::Status;
+    use rocket::local::blocking::Client;
+
+    #[test]
+    fn test_list_books() {
+        let rocket = rocket::build().attach(stage());
+        let client = Client::tracked(rocket).expect("valid rocket instance");
+        let response = client.get("/books").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let books: Vec<Book> = response.into_json().expect("valid json");
+        assert_eq!(books.len(), 2);
+    }
+    #[test]
+    fn test_add_book() {
+        let rocket = rocket::build().attach(stage());
+        let client = Client::tracked(rocket).expect("valid rocket instance");
+        let new_book = Book {
+            id: Some(3),
+            title: "The Hobbit".to_string(),
+            author: "J.R.R. Tolkien".to_string(),
+            read: false,
+        };
+        let response = client.post("/books").json(&new_book).dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let books: Vec<Book> = response.into_json().expect("valid json");
+        assert_eq!(books.len(), 3);
+        assert_eq!(books[2], new_book);
+    }
+    #[test]
+    fn test_update_book() {
+        let rocket = rocket::build().attach(stage());
+        let client = Client::tracked(rocket).expect("valid rocket instance");
+        let updated_book = Book {
+            id: Some(1),
+            title: "The Lord of the Rings".to_string(),
+            author: "J.R.R. Tolkien".to_string(),
+            read: true,
+        };
+        let response = client.put("/books/1").json(&updated_book).dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let books: Vec<Book> = response.into_json().expect("valid json");
+        assert_eq!(books.len(), 2);
+        assert_eq!(books[0], updated_book);
+    }
 }
