@@ -1,6 +1,6 @@
 # Python Vue Crude App
 
-## Running app
+## Running flask server
 
 ### To activate the virtual enviroment
 
@@ -32,7 +32,13 @@ export FLASK_APP=app
 flask run
 ```
 
-### To run client side vue
+## To run server side rocket
+
+```
+cargo run
+```
+
+## To run client side vue
 
 make sure you're in the client folder
 

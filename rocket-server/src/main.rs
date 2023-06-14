@@ -32,7 +32,22 @@ async fn list_books(book_list: &State<BookList>) -> Json<Vec<Book>> {
     println!("Received request: {:?}", book_list);
     Json((*my_list).clone())
 }
+#[post("/books", data = "<new_book>")]
+async fn add_book(book_list: &State<BookList>, new_book: Json<Book>) -> Json<Vec<Book>> {
+    let mut my_list = book_list.lock().await;
+    (*my_list).push(new_book.into_inner());
+    Json((*my_list).clone())
+}
 
+// #[put("/<id>", data = "<book>")]
+// fn update(id: Id, book: Json<Message<'_>>) -> Value {
+//     if db.contains_key(&id) {
+//         db.insert(id, msg.contents);
+//         json!({ "status": "ok" })
+//     } else {
+//         json!({ "status": "error" })
+//     }
+// }
 #[catch(404)]
 fn not_found() -> Value {
     json!({
@@ -43,7 +58,7 @@ fn not_found() -> Value {
 pub fn stage() -> rocket::fairing::AdHoc {
     rocket::fairing::AdHoc::on_ignite("JSON", |rocket| async {
         rocket
-            .mount("/", routes![list_books, index])
+            .mount("/", routes![list_books, index, add_book])
             .register("/", catchers![not_found])
             .manage(BookList::new(vec![
                 Book {
