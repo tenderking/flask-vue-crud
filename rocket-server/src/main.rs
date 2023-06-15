@@ -54,6 +54,17 @@ async fn update_book(
         None
     }
 }
+#[delete("/books/<id>")]
+async fn delete_book(id: Id, book_list: &State<BookList>) -> Option<Json<Vec<Book>>> {
+    let mut my_list = book_list.lock().await;
+    let index = (*my_list).iter().position(|book| book.id == Some(id));
+    if let Some(index) = index {
+        (*my_list).remove(index);
+        Some(Json((*my_list).clone()))
+    } else {
+        None
+    }
+}
 
 #[catch(404)]
 fn not_found() -> Value {
@@ -65,7 +76,10 @@ fn not_found() -> Value {
 pub fn stage() -> rocket::fairing::AdHoc {
     rocket::fairing::AdHoc::on_ignite("JSON", |rocket| async {
         rocket
-            .mount("/", routes![index, list_books, add_book, update_book])
+            .mount(
+                "/",
+                routes![index, list_books, add_book, update_book, delete_book],
+            )
             .register("/", catchers![not_found])
             .manage(BookList::new(vec![
                 Book {
@@ -135,5 +149,20 @@ mod tests {
         let books: Vec<Book> = response.into_json().expect("valid json");
         assert_eq!(books.len(), 2);
         assert_eq!(books[0], updated_book);
+    }
+    #[test]
+
+    fn test_delete_book() {
+        let rocket = rocket::build().attach(stage());
+        let client = Client::tracked(rocket).expect("valid rocket instance");
+        let response = client.get("/books").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let books: Vec<Book> = response.into_json().expect("valid json");
+        assert_eq!(books.len(), 2);
+        let _response = client.delete("/books/1").dispatch();
+        let response = client.get("/books").dispatch();
+        assert_eq!(response.status(), Status::Ok);
+        let books: Vec<Book> = response.into_json().expect("valid json");
+        assert_eq!(books.len(), 1);
     }
 }
